@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factorizador Cuadrático</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Poppins:wght@700&display=swap');
+
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #1abc9c;
+            --highlight-color: #ecf0f1;
+            --text-color: #bdc3c7;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: 'Roboto Mono', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 0 25px rgba(26, 188, 156, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--accent-color);
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px var(--accent-color);
+        }
+        
+        #info-display {
+            display: flex;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--highlight-color);
+            margin-bottom: 1.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #2c3e50;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        #mision-nombre {
+            color: var(--highlight-color);
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            height: 30px;
+        }
+
+        #problema {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 1.5rem 0;
+            color: var(--highlight-color);
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 1.8rem;
+            color: var(--highlight-color);
+        }
+
+        input[type="text"] {
+            background-color: var(--primary-color);
+            border: 2px solid var(--accent-color);
+            color: var(--highlight-color);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            border-radius: 4px;
+            width: 80px;
+            padding: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0.5rem;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        #siguiente-btn {
+            display: none;
+            background-color: var(--highlight-color);
+        }
+        #reiniciar-btn { display: none; }
+        
+        #feedback {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            height: 30px;
+            font-weight: bold;
+        }
+
+        .feedback-correct { color: var(--success-color); }
+        .feedback-incorrect { color: var(--error-color); }
+        
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #2c3e50;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: var(--accent-color);
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>El Laboratorio de Factores</h1>
+
+        <div id="info-display">
+            <span id="score">Calificación: 0 / 10</span>
+        </div>
+        
+        <div class="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+        
+        <h3 id="mision-nombre"></h3>
+        <div id="problema"></div>
+        
+        <div id="input-area"></div>
+        
+        <div class="controls">
+            <button id="verificar-btn">Factorizar</button>
+            <button id="siguiente-btn">Siguiente Experimento</button>
+            <button id="reiniciar-btn">Nueva Simulación</button>
+        </div>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const formatEquation = (a, b, c) => {
+            let equation = "";
+            if (a !== 1) equation += `${a}`;
+            equation += "x²";
+
+            if (b !== 0) {
+                if (b > 0) equation += ` + ${b}x`;
+                else equation += ` - ${Math.abs(b)}x`;
+            }
+
+            if (c !== 0) {
+                if (c > 0) equation += ` + ${c}`;
+                else equation += ` - ${Math.abs(c)}`;
+            }
+            equation += " = 0";
+            return equation;
+        };
+
+        const misiones = [
+            {
+                nombre: "Experimento 1: Trinomio x² + bx + c",
+                generator: () => {
+                    const r1 = randInt(2, 7);
+                    const r2 = -randInt(1, 5);
+                    const b = r1 + r2;
+                    const c = r1 * r2;
+                    return {
+                        problema: `x² ${b > 0 ? '+' : ''} ${b}x ${c > 0 ? '+' : ''} ${c} = 0`,
+                        inputHTML: `<div class="input-group">(x + <input type="text" id="f1">) (x + <input type="text" id="f2">) = 0</div>`,
+                        verificar: () => {
+                            const f1 = parseInt(document.getElementById('f1').value);
+                            const f2 = parseInt(document.getElementById('f2').value);
+                            return (f1 === -r1 && f2 === -r2) || (f1 === -r2 && f2 === -r1);
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Experimento 2: Diferencia de Cuadrados",
+                generator: () => {
+                    const n = randInt(3, 9);
+                    const c = -n * n;
+                    return {
+                        problema: `x² - ${n*n} = 0`,
+                        inputHTML: `<div class="input-group">(x + <input type="text" id="f1">) (x - <input type="text" id="f2">) = 0</div>`,
+                        verificar: () => {
+                            const f1 = parseInt(document.getElementById('f1').value);
+                            const f2 = parseInt(document.getElementById('f2').value);
+                            return f1 === n && f2 === n;
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Experimento 3: Factor Común",
+                generator: () => {
+                    const a = randInt(2, 5);
+                    const b = a * randInt(2, 6);
+                    return {
+                        problema: `${a}x² + ${b}x = 0`,
+                        inputHTML: `<div class="input-group"><input type="text" id="f1"> (x + <input type="text" id="f2">) = 0</div>`,
+                        verificar: () => {
+                            const f1 = document.getElementById('f1').value.trim();
+                            const f2 = parseInt(document.getElementById('f2').value);
+                            return f1 === `${a}x` && f2 === b / a;
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Experimento 4: Trinomio ax² + bx + c",
+                generator: () => {
+                    const a = 2;
+                    const r1 = 3;
+                    const r2 = -1; // Soluciones: x = -3/2, x = 1
+                    // (2x+3)(x-1) = 2x^2 -2x + 3x - 3 = 2x^2 + x - 3
+                    const b = 1;
+                    const c = -3;
+                    return {
+                        problema: formatEquation(a, b, c),
+                        inputHTML: `<div class="input-group">(<input type="text" id="f1">x + <input type="text" id="f2">) (x + <input type="text" id="f3">) = 0</div>`,
+                        verificar: () => {
+                             const f1 = document.getElementById('f1').value;
+                             const f2 = document.getElementById('f2').value;
+                             const f3 = document.getElementById('f3').value;
+                             return (f1 == '2' && f2 == '3' && f3 == '-1');
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Experimento 5: Problema de Área",
+                generator: () => {
+                    const ancho = randInt(3, 6);
+                    const largo = ancho + 2;
+                    const area = ancho * largo;
+                    // (x)(x+2) = area -> x^2 + 2x - area = 0
+                    const b = 2;
+                    const c = -area;
+                    return {
+                        problema: `El largo de un rectángulo es 2m más que su ancho (x). Si su área es ${area}m², ¿cuál es la ecuación factorizada?`,
+                        inputHTML: `<div class="input-group">(x + <input type="text" id="f1">) (x + <input type="text" id="f2">) = 0</div>`,
+                        verificar: () => {
+                            const f1 = parseInt(document.getElementById('f1').value);
+                            const f2 = parseInt(document.getElementById('f2').value);
+                            // (x - ancho)(x + largo) = x^2 + (largo-ancho)x - ancho*largo... no.
+                            // x^2 + 2x - area = 0
+                            // (x + largo)(x - ancho) = 0
+                            return (f1 === largo && f2 === -ancho) || (f1 === -ancho && f2 === largo);
+                        }
+                    };
+                }
+            }
+        ];
+
+        let misionActual = 0;
+        let misionData = {};
+        let puntuacion = 0;
+        
+        const misionNombreDisplay = document.getElementById('mision-nombre');
+        const problemaDiv = document.getElementById('problema');
+        const inputArea = document.getElementById('input-area');
+        const feedbackDiv = document.getElementById('feedback');
+        const verificarBtn = document.getElementById('verificar-btn');
+        const siguienteBtn = document.getElementById('siguiente-btn');
+        const reiniciarBtn = document.getElementById('reiniciar-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreDisplay = document.getElementById('score');
+
+        function updateInfoDisplay() {
+            scoreDisplay.textContent = `Calificación: ${puntuacion} / 10`;
+        }
+
+        function updateProgressBar() {
+            const progress = (misionActual / misiones.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function cargarMision(index) {
+            const mision = misiones[index];
+            misionData = mision.generator();
+            
+            misionNombreDisplay.textContent = mision.nombre;
+            problemaDiv.innerHTML = misionData.problema.replace(/(\d)x/g, '$1x').replace(/\+ -/g, '- ');
+            
+            inputArea.innerHTML = misionData.inputHTML;
+            
+            feedbackDiv.textContent = 'Encuentra los factores de la molécula.';
+            feedbackDiv.className = '';
+            
+            verificarBtn.style.display = 'inline-block';
+            verificarBtn.disabled = false;
+            siguienteBtn.style.display = 'none';
+            reiniciarBtn.style.display = 'none';
+
+            updateProgressBar();
+            updateInfoDisplay();
+        }
+        
+        function verificarRespuesta() {
+            const esCorrecto = misionData.verificar();
+            
+            if (esCorrecto) {
+                puntuacion += 2;
+                feedbackDiv.textContent = '¡Factorización exitosa! Elementos aislados.';
+                feedbackDiv.className = 'feedback-correct';
+            } else {
+                feedbackDiv.textContent = '¡Error en la descomposición! Revisa los factores.';
+                feedbackDiv.className = 'feedback-incorrect';
+            }
+            
+            verificarBtn.disabled = true;
+            inputArea.querySelectorAll('input').forEach(el => el.disabled = true);
+            
+            if (misionActual < misiones.length - 1) {
+                siguienteBtn.style.display = 'inline-block';
+            } else {
+                setTimeout(() => {
+                    misionNombreDisplay.textContent = "¡Simulación Completada!";
+                    problemaDiv.innerHTML = `Calificación Final: ${puntuacion} / 10. ¡Eres un maestro/a de la factorización!`;
+                    inputArea.innerHTML = '';
+                    verificarBtn.style.display = 'none';
+                    reiniciarBtn.style.display = 'inline-block';
+                    misionActual++;
+                    updateProgressBar();
+                }, 1500);
+            }
+            updateInfoDisplay();
+        }
+        
+        verificarBtn.addEventListener('click', verificarRespuesta);
+
+        inputArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                verificarBtn.click();
+            }
+        });
+
+        siguienteBtn.addEventListener('click', () => {
+            misionActual++;
+            if (misionActual < misiones.length) {
+                cargarMision(misionActual);
+            }
+        });
+
+        reiniciarBtn.addEventListener('click', () => {
+            misionActual = 0;
+            puntuacion = 0;
+            cargarMision(misionActual);
+        });
+
+        window.onload = () => {
+            cargarMision(misionActual);
+        };
+    </script>
+</body>
+</html>
